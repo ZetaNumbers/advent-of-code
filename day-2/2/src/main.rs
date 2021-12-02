@@ -1,27 +1,6 @@
-use std::str::FromStr;
-
-const INPUT: &str = include_str!("../../input.txt");
-
-enum Command {
-    Forward,
-    Down,
-    Up,
-}
-
-impl FromStr for Command {
-    type Err = ();
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "forward" => Ok(Command::Forward),
-            "down" => Ok(Command::Down),
-            "up" => Ok(Command::Up),
-            _ => Err(()),
-        }
-    }
-}
-
 fn main() {
+    const INPUT: &str = include_str!("../../input.txt");
+
     let mut horiz = 0;
     let mut depth = 0;
     let mut aim = 0;
@@ -41,4 +20,23 @@ fn main() {
     }
 
     println!("The answer is: {}", horiz * depth);
+}
+
+enum Command {
+    Forward,
+    Down,
+    Up,
+}
+
+impl std::str::FromStr for Command {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "forward" => Ok(Command::Forward),
+            "down" => Ok(Command::Down),
+            "up" => Ok(Command::Up),
+            _ => Err(()),
+        }
+    }
 }
