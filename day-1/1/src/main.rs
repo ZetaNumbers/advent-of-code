@@ -1,24 +1,11 @@
-#![feature(array_windows)]
+fn main() {
+    const INPUT: &'static str = include_str!("../../input.txt");
 
-use anyhow::Result;
-use std::{
-    fs,
-    io::{self, BufRead},
-};
-
-fn main() -> Result<()> {
-    let f = io::BufReader::new(fs::File::open("day-1/input.txt")?);
-
-    let depths = f
+    let depths: Vec<u32> = INPUT
         .lines()
-        .map(|line| -> Result<_> { Ok(line?.trim().parse::<u32>()?) })
-        .collect::<Result<Vec<_>>>()?;
-    let increases = depths
-        .array_windows()
-        .filter(|&[first, next]| first < next)
-        .count();
+        .map(|line| line.trim().parse().unwrap())
+        .collect();
+    let increases = depths.windows(2).filter(|w| w[0] < w[1]).count();
 
     println!("The answer is: {}", increases);
-
-    Ok(())
 }
