@@ -2,28 +2,6 @@ use nalgebra::{SMatrix, SVector};
 
 const INPUT: &str = include_str!("../input.txt");
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn input_is_ascii() {
-        assert!(INPUT.is_ascii())
-    }
-
-    #[test]
-    fn parsing_word() {
-        let s = "010011010000";
-        let out = format!("{:012b}", word_to_u32(&parse_word(s)));
-        assert_eq!(s, out);
-    }
-
-    #[test]
-    fn pt1() {
-        assert_eq!(part_1(), 2724524)
-    }
-}
-
 pub fn part_1() -> u32 {
     let input = parse_input();
 
@@ -60,4 +38,26 @@ fn parse_word(s: &str) -> SVector<bool, 12> {
 
 fn word_to_u32(v: &SVector<bool, 12>) -> u32 {
     v.iter().fold(0, |acc, &bit| acc << 1 | bit as u32)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn input_is_ascii() {
+        assert!(INPUT.is_ascii())
+    }
+
+    #[test]
+    fn parsing_word() {
+        let s = "010011010000";
+        let out = format!("{:012b}", word_to_u32(&parse_word(s)));
+        assert_eq!(s, out);
+    }
+
+    #[test]
+    fn pt1() {
+        assert_eq!(part_1(), 2724524)
+    }
 }

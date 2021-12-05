@@ -1,18 +1,5 @@
 const INPUT: &str = include_str!("../input.txt");
 
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn pt1() {
-        assert_eq!(super::part_1(), 1507611);
-    }
-
-    #[test]
-    fn pt2() {
-        assert_eq!(super::part_2(), 1880593125);
-    }
-}
-
 pub fn part_1() -> i32 {
     let [ans_h, ans_d] = parse_input()
         .into_iter()
@@ -72,5 +59,18 @@ impl std::str::FromStr for Command {
             "up" => Ok(Command::Up),
             _ => Err(()),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn pt1() {
+        assert_eq!(super::part_1(), 1507611);
+    }
+
+    #[test]
+    fn pt2() {
+        assert_eq!(super::part_2(), 1880593125);
     }
 }

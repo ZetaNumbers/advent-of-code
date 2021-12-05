@@ -9,6 +9,17 @@ pub fn part_2() -> usize {
     count_increases(&local_sums)
 }
 
+fn parse_input() -> Vec<u32> {
+    INPUT
+        .lines()
+        .map(|line| line.trim().parse().unwrap())
+        .collect()
+}
+
+fn count_increases(v: &Vec<u32>) -> usize {
+    v.windows(2).filter(|w| w[0] < w[1]).count()
+}
+
 #[cfg(test)]
 mod tests {
     #[test]
@@ -20,15 +31,4 @@ mod tests {
     fn pt2() {
         assert_eq!(super::part_2(), 1543)
     }
-}
-
-fn parse_input() -> Vec<u32> {
-    INPUT
-        .lines()
-        .map(|line| line.trim().parse().unwrap())
-        .collect()
-}
-
-fn count_increases(v: &Vec<u32>) -> usize {
-    v.windows(2).filter(|w| w[0] < w[1]).count()
 }
