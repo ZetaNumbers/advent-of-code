@@ -1,43 +1,71 @@
-use nalgebra::{SMatrix, SVector};
+use std::cmp;
 
 const INPUT: &str = include_str!("../input.txt");
 
 pub fn part_1() -> u32 {
     let input = parse_input();
 
-    let hist: SMatrix<u32, 12, 2> = input
-        .map(|word| SMatrix::from_columns(&[word.map(|x| !x as u32), word.map(|x| x as u32)]))
-        .sum();
+    let mut hist = Histogram::default();
+    for &word in &input {
+        let word = decompress_word(word);
+        for (dst, bit) in hist.iter_mut().zip(word) {
+            dst[bit as usize] += 1;
+        }
+    }
 
-    let gamma = word_to_u32(&SVector::from_iterator(
-        hist.row_iter().map(|h| h[0] < h[1]),
-    ));
-    let epsilon = word_to_u32(&SVector::from_iterator(
-        hist.row_iter().map(|h| h[0] > h[1]),
-    ));
+    let mut gamma = 0;
+    let mut epsilon = 0;
+    for stats in hist {
+        let [gamma_bit, epsilon_bit] = match stats[0].cmp(&stats[1]) {
+            cmp::Ordering::Less => [1, 0],
+            cmp::Ordering::Equal => unreachable!(),
+            cmp::Ordering::Greater => [0, 1],
+        };
 
-    assert_eq!(!gamma & 0xfff, epsilon);
+        gamma = gamma << 1 | gamma_bit;
+        epsilon = epsilon << 1 | epsilon_bit;
+    }
 
     gamma * epsilon
 }
 
-fn parse_input() -> impl Iterator<Item = SVector<bool, 12>> {
-    INPUT.lines().map(parse_word)
+type Word = [bool; 12];
+type CompactWord = u16;
+type Histogram = [[u32; 2]; 12];
+
+fn parse_input() -> Vec<CompactWord> {
+    INPUT
+        .lines()
+        .map(|line| compress_word(&parse_word(line)))
+        .collect()
 }
 
-fn parse_word(s: &str) -> SVector<bool, 12> {
+fn parse_word(s: &str) -> Word {
+    let mut out = Word::default();
     let mut iter = s.bytes().map(|ch| match ch {
         b'0' => false,
         b'1' => true,
         _ => unreachable!(),
     });
-    let out = SVector::from_iterator(&mut iter);
+
+    for (dst, bit) in out.iter_mut().zip(&mut iter) {
+        *dst = bit;
+    }
+
     assert_eq!(iter.next(), None, "word should only be 12 bits long");
     out
 }
 
-fn word_to_u32(v: &SVector<bool, 12>) -> u32 {
-    v.iter().fold(0, |acc, &bit| acc << 1 | bit as u32)
+fn compress_word(v: &Word) -> CompactWord {
+    v.iter().fold(0, |acc, &bit| acc << 1 | bit as u16)
+}
+
+fn decompress_word(v: CompactWord) -> Word {
+    let mut out = Word::default();
+    out.iter_mut().rev().enumerate().for_each(|(i, dst)| {
+        *dst = v >> i & 1 == 1;
+    });
+    out
 }
 
 #[cfg(test)]
@@ -52,7 +80,7 @@ mod tests {
     #[test]
     fn parsing_word() {
         let s = "010011010000";
-        let out = format!("{:012b}", word_to_u32(&parse_word(s)));
+        let out = format!("{:012b}", compress_word(&parse_word(s)));
         assert_eq!(s, out);
     }
 
