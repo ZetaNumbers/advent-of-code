@@ -1,91 +1,130 @@
 use std::cmp;
 
-const INPUT: &str = include_str!("../input.txt");
+pub const INPUT: &str = include_str!("../input.txt");
+pub const TOY_INPUT: &str = include_str!("../toy-input.txt");
 
-pub fn part_1() -> u32 {
-    let input = parse_input();
+pub fn parse_input(s: &str) -> Vec<u32> {
+    s.lines().map(parse_word).collect()
+}
 
-    let mut hist = Histogram::default();
+pub fn part_1(input: Vec<u32>) -> u32 {
+    let mut histogram = [[0_u32; 2]; 32];
     for &word in &input {
-        let word = decompress_word(word);
-        for (dst, bit) in hist.iter_mut().zip(word) {
+        for (i, dst) in histogram.iter_mut().enumerate() {
+            let bit = word >> i & 1;
             dst[bit as usize] += 1;
         }
     }
 
-    let mut gamma = 0;
-    let mut epsilon = 0;
-    for stats in hist {
-        let [gamma_bit, epsilon_bit] = match stats[0].cmp(&stats[1]) {
-            cmp::Ordering::Less => [1, 0],
-            cmp::Ordering::Equal => unreachable!(),
-            cmp::Ordering::Greater => [0, 1],
-        };
-
-        gamma = gamma << 1 | gamma_bit;
-        epsilon = epsilon << 1 | epsilon_bit;
-    }
+    let (gamma, epsilon) = histogram
+        .iter()
+        .rev()
+        .fold((0, 0), |(gamma, epsilon), stats| {
+            dbg!(stats);
+            let most_common_bit = most_common_bit(*stats, || panic!()) as u32;
+            let least_common_bit = least_common_bit(*stats, || panic!()) as u32;
+            dbg!(most_common_bit);
+            dbg!(least_common_bit);
+            (
+                gamma << 1 | most_common_bit,
+                epsilon << 1 | least_common_bit,
+            )
+        });
 
     gamma * epsilon
 }
 
-type Word = [bool; 12];
-type CompactWord = u16;
-type Histogram = [[u32; 2]; 12];
-
-fn parse_input() -> Vec<CompactWord> {
-    INPUT
-        .lines()
-        .map(|line| compress_word(&parse_word(line)))
-        .collect()
-}
-
-fn parse_word(s: &str) -> Word {
-    let mut out = Word::default();
-    let mut iter = s.bytes().map(|ch| match ch {
-        b'0' => false,
-        b'1' => true,
-        _ => unreachable!(),
+pub fn part_2(input: Vec<u32>) -> u32 {
+    let oxigen_rate = lifesystem_rate(input.clone(), |stats| {
+        cmp::max_by_key(false, true, |&b| stats[b as usize])
+    });
+    let co2_rate = lifesystem_rate(input, |stats| {
+        cmp::min_by_key(true, false, |&b| stats[b as usize])
     });
 
-    for (dst, bit) in out.iter_mut().zip(&mut iter) {
-        *dst = bit;
+    oxigen_rate * co2_rate
+}
+
+fn parse_word(s: &str) -> u32 {
+    assert!(s.len() <= 32);
+
+    s.bytes().rev().fold(0, |acc, ch| {
+        let bit = match ch {
+            b'0' => 0,
+            b'1' => 1,
+            _ => unreachable!(),
+        };
+        (acc << 1) | bit
+    })
+}
+
+fn lifesystem_rate<F>(mut candidates: Vec<u32>, mut criteria: F) -> u32
+where
+    F: FnMut([u32; 2]) -> bool,
+{
+    let mut criteria_pos = 12;
+    loop {
+        match candidates.as_slice() {
+            [rate] => break *rate as u32,
+            [] => unreachable!(),
+            _ => (),
+        }
+        criteria_pos -= 1;
+
+        let mut stats = [0; 2];
+        candidates.iter().for_each(|w| {
+            let bit = w >> criteria_pos & 1;
+            stats[bit as usize] += 1;
+        });
+
+        let criteria_bit = match stats {
+            [0, _] => true,
+            [_, 0] => false,
+            stats => criteria([stats[0], stats[1]]),
+        } as u32;
+
+        candidates = candidates
+            .iter()
+            .copied()
+            .filter(|w| (w >> criteria_pos & 1) == criteria_bit)
+            .collect();
     }
-
-    assert_eq!(iter.next(), None, "word should only be 12 bits long");
-    out
 }
 
-fn compress_word(v: &Word) -> CompactWord {
-    v.iter().fold(0, |acc, &bit| acc << 1 | bit as u16)
+fn least_common_bit<F>(stats: [u32; 2], on_equals: F) -> bool
+where
+    F: FnOnce() -> bool,
+{
+    match stats {
+        [a, b] if a == b => on_equals(),
+        [0, _] => true,
+        [_, 0] => false,
+        stats => cmp::min_by_key(false, true, |&b| stats[b as usize]),
+    }
 }
 
-fn decompress_word(v: CompactWord) -> Word {
-    let mut out = Word::default();
-    out.iter_mut().rev().enumerate().for_each(|(i, dst)| {
-        *dst = v >> i & 1 == 1;
-    });
-    out
+fn most_common_bit<F>(stats: [u32; 2], on_equals: F) -> bool
+where
+    F: FnOnce() -> bool,
+{
+    match stats {
+        [a, b] if a == b => on_equals(),
+        [0, _] => true,
+        [_, 0] => false,
+        stats => cmp::max_by_key(false, true, |&b| stats[b as usize]),
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
-    #[test]
-    fn input_is_ascii() {
-        assert!(INPUT.is_ascii())
-    }
-
     #[test]
     fn parsing_word() {
-        let s = "010011010000";
-        let out = format!("{:012b}", compress_word(&parse_word(s)));
-        assert_eq!(s, out);
-    }
-
-    #[test]
-    fn pt1() {
-        assert_eq!(part_1(), 2724524)
+        let mut s = b"010011010000".to_owned();
+        let out = format!(
+            "{:012b}",
+            crate::parse_word(std::str::from_utf8(&s).unwrap())
+        );
+        s.reverse();
+        assert_eq!(s, out.as_bytes());
     }
 }
