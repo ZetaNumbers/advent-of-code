@@ -7,5 +7,5 @@ fn part_1() {
 
 #[test]
 fn part_2() {
-    assert_eq!(day_3::part_2(parse_input(INPUT)), 0)
+    assert_eq!(day_3::part_2(parse_input(INPUT)), 2775870)
 }
