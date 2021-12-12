@@ -1,5 +1,5 @@
 [package]
-name = "day-5"
+name = "day-05"
 version = "0.1.0"
 edition = "2021"
 
@@ -9,3 +9,4 @@ edition = "2021"
 nalgebra = "0.29.0"
 
 [features]
+
