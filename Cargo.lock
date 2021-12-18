@@ -134,6 +134,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "day-18"
+version = "0.1.0"
+dependencies = [
+ "itertools",
+ "smallbitvec",
+]
+
+[[package]]
 name = "either"
 version = "1.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -286,6 +294,12 @@ dependencies = [
  "paste",
  "wide",
 ]
+
+[[package]]
+name = "smallbitvec"
+version = "2.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "75ce4f9dc4a41b4c3476cc925f1efb11b66df373a8fde5d4b8915fa91b5d995e"
 
 [[package]]
 name = "syn"
